@@ -19,7 +19,7 @@ Your phone → Sarvam phone number → Saara (Sarvam voice agent)
 - Track deadlines and phone you before they're due, or when the battery is low
 - Read your Google Classroom to-do list and attach assignments
 
-Only your own phone number is obeyed, and every request needs your secret token. Saara can only run the fixed actions in `arrc/server.js`. Nothing said on a call ever runs as a command.
+Only your own phone number is obeyed, and every request needs your secret token. Saara can only run the fixed actions in `saara/server.js`. Nothing said on a call ever runs as a command.
 
 ## Dashboard
 
@@ -31,23 +31,23 @@ You need Windows, [Node.js](https://nodejs.org) (LTS), a Sarvam account with cre
 
 1. **Install**
    ```
-   cd arrc
+   cd saara
    npm install
    copy .env.example .env
    ```
-2. **Configure `arrc/.env`**
+2. **Configure `saara/.env`**
    - `JARVIS_TOKEN`: a long random password. Make one with
      `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
    - `OWNER_NUMBER`: your mobile number, digits only with country code, e.g. `919876543210`
 3. **Install the tunnel** (once): `winget install --id Cloudflare.cloudflared`
 4. **Start everything**: double-click `start-saara.bat`. It opens the server, the tunnel and the dashboard. Keep both windows open.
 5. **Create the agent in Sarvam** (indus.sarvam.ai → Build → Agents)
-   - Instructions: paste `J-agent/1-instructions-prompt.txt`
+   - Instructions: paste `saara-agent/1-instructions-prompt.txt`
    - Variable `opening_line`, default `Hey Boss, it's Saara. What can I do for you?`; Greeting `{{opening_line}}`
    - Add an API tool named `laptop_action`:
      | Field | Value |
      |---|---|
-     | Description | paste `J-agent/2-tool-description.txt` |
+     | Description | paste `saara-agent/2-tool-description.txt` |
      | Method / URL | `POST` `https://<your-tunnel>.trycloudflare.com/action` (the dashboard shows it) |
      | Auth | Bearer token = your `JARVIS_TOKEN`, saved as a secret |
      | Params | `action`, `input`: let the agent decide · `caller`: agent variable **User Identifier** |
@@ -62,11 +62,11 @@ The free tunnel address changes every time cloudflared restarts. Update the tool
 
 ## Add your own action
 
-Every action is a function inside `const ACTIONS = {` in `arrc/server.js`. Whatever it returns is what Saara says. Add the action name to the tool description and one line to the instructions, then commit a new agent version.
+Every action is a function inside `const ACTIONS = {` in `saara/server.js`. Whatever it returns is what Saara says. Add the action name to the tool description and one line to the instructions, then commit a new agent version.
 
 ## Keep it safe
 
-Never share `arrc/.env`, your tunnel address or your Sarvam keys. They are git-ignored, along with the Classroom sign-in profile.
+Never share `saara/.env`, your tunnel address or your Sarvam keys. They are git-ignored, along with the Classroom sign-in profile.
 
 ## Author
 
