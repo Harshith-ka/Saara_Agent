@@ -1,0 +1,14 @@
+{
+  "name": "saara-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Saara: a voice agent you phone to run your Windows laptop.",
+  "author": "Harshith",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "playwright-core": "1.63.0"
+  }
+}

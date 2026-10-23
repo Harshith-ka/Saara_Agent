@@ -1,0 +1,20 @@
+# Secrets: password, phone number, Sarvam keys
+.env
+.env.*
+!.env.example
+
+# Google sign-in cookies for the Classroom window
+.classroom-profile/
+
+# Personal data written at runtime
+deadlines.json
+classroom-cache.json
+classroom-state.json
+
+# Dependencies and logs
+node_modules/
+*.log
+
+# Original download kit (replaced by README.md)
+ARRC-Build-Guide.pdf
+START-HERE.txt

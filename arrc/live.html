@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SAARA Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#02060b; --bg2:#051322; --glass:rgba(10,28,46,.55); --glass2:rgba(12,36,58,.7);
+  --line:rgba(0,229,255,.16); --line2:rgba(0,229,255,.38);
+  --ink:#dcf7ff; --muted:#6c8fa3; --dim:#3d5a6c;
+  --cyan:#00e5ff; --blue:#2f80ff; --violet:#8b5cf6; --amber:#ffb547; --red:#ff4d6d; --green:#3dffa8;
+  --glow:0 0 12px rgba(0,229,255,.55),0 0 30px rgba(0,229,255,.22);
+  --r:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-ui,sans-serif;overflow-x:hidden}
+/* ambient background: aurora blobs + perspective grid */
+.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bgfx::before{content:"";position:absolute;inset:-20%;background:
+  radial-gradient(40% 35% at 20% 15%,rgba(47,128,255,.22),transparent 70%),
+  radial-gradient(35% 30% at 85% 20%,rgba(139,92,246,.18),transparent 70%),
+  radial-gradient(45% 40% at 50% 60%,rgba(0,229,255,.14),transparent 70%);
+  filter:blur(20px);animation:drift 26s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(3%,-2%,0) scale(1.06)}}
+.bgfx::after{content:"";position:absolute;left:-50%;right:-50%;bottom:-10%;height:55%;
+  background:linear-gradient(rgba(0,229,255,.12) 1px,transparent 1px) 0 0/60px 60px,linear-gradient(90deg,rgba(0,229,255,.12) 1px,transparent 1px) 0 0/60px 60px;
+  transform:perspective(600px) rotateX(62deg);transform-origin:bottom;mask-image:linear-gradient(transparent,#000 70%);animation:grid 6s linear infinite}
+@keyframes grid{to{background-position:0 60px,0 0}}
+.scan{position:fixed;inset:0;z-index:40;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.3}
+
+/* The page grows with its content; only tall screens get the locked one-screen layout (see media query below). */
+.app{position:relative;z-index:1;display:grid;grid-template-rows:auto auto auto;min-height:100vh;max-width:1600px;margin:0 auto;padding:14px 18px 16px;gap:14px}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px)}
+.logo{display:flex;align-items:center;gap:10px;font:900 18px "Orbitron",sans-serif;letter-spacing:.3em;color:#fff;text-shadow:var(--glow)}
+.logo .mark{width:28px;height:28px;border-radius:50%;border:2px solid var(--cyan);box-shadow:var(--glow),inset 0 0 10px rgba(0,229,255,.6);position:relative}
+.logo .mark::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--cyan);box-shadow:var(--glow);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4;transform:scale(.8)}}
+.pills{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.pill{display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(0,0,0,.25);
+  font:600 11px "JetBrains Mono",monospace;letter-spacing:.1em;color:var(--muted);white-space:nowrap}
+.pill b{color:var(--ink);font-weight:600}
+.clock{font:600 13px "JetBrains Mono",monospace;color:#fff;letter-spacing:.08em;padding-left:6px;white-space:nowrap}
+.ok{color:var(--green)} .warn{color:var(--amber)} .bad{color:var(--red)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:blink 1.8s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* ---------- main grid ---------- */
+.main{display:grid;grid-template-columns:300px minmax(0,1fr) 360px;gap:16px;min-height:0}
+.col{display:flex;flex-direction:column;gap:16px;min-height:0}
+.card{position:relative;border-radius:var(--r);padding:16px;background:linear-gradient(160deg,var(--glass2),var(--glass));
+  border:1px solid var(--line);backdrop-filter:blur(14px);box-shadow:0 20px 50px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04)}
+.card::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(0,229,255,.55),transparent 35%,transparent 65%,rgba(139,92,246,.45));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;
+  font:700 11px "Orbitron",sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.45)}
+.h small{font:600 10px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--muted);text-shadow:none}
+.grow{flex:1;min-height:0;display:flex;flex-direction:column}
+
+/* gauges */
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gauge{position:relative;aspect-ratio:1;display:grid;place-items:center}
+.gauge svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.gauge .track{stroke:rgba(0,229,255,.1)}
+.gauge .val{stroke:url(#gg);stroke-linecap:round;transition:stroke-dashoffset .8s ease;filter:drop-shadow(0 0 4px rgba(0,229,255,.7))}
+.gauge.hot .val{stroke:var(--amber);filter:drop-shadow(0 0 4px rgba(255,181,71,.7))}
+.gauge.low .val{stroke:var(--red);filter:drop-shadow(0 0 4px rgba(255,77,109,.7))}
+.gauge .num{text-align:center;font:700 20px "Rajdhani",sans-serif;color:#fff;line-height:1}
+.gauge .num small{display:block;font:600 9px "JetBrains Mono",monospace;letter-spacing:.14em;color:var(--muted);margin-top:4px}
+.stats{display:flex;flex-direction:column;gap:2px;margin-top:12px}
+.stat{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px dashed var(--line);font-size:15px}
+.stat:last-child{border-bottom:0}
+.stat i{font-style:normal;font:600 12px "JetBrains Mono",monospace;color:var(--ink)}
+
+/* tunnel */
+.tunnel{font:600 12px "JetBrains Mono",monospace;word-break:break-all;color:#fff;padding:10px 12px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+.tunnel.off{color:var(--amber);word-break:normal;font-family:"Rajdhani",sans-serif;font-size:15px}
+.btn{font:700 10px "Orbitron",sans-serif;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;padding:9px 12px;border-radius:10px;
+  border:1px solid var(--line2);background:rgba(0,229,255,.06);color:var(--cyan);transition:all .2s}
+.btn:hover{box-shadow:var(--glow);background:rgba(0,229,255,.14)}
+.btn.solid{border:0;background:linear-gradient(90deg,var(--blue),var(--cyan));color:#001520}
+.row{display:flex;gap:8px;margin-top:10px}
+.row .btn{flex:1}
+.callno{font:600 20px "JetBrains Mono",monospace;color:#fff;letter-spacing:.06em;text-shadow:0 0 12px rgba(0,229,255,.4)}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+
+/* ---------- center stage ---------- */
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:0;padding:6px 0}
+.title{text-align:center}
+.title h1{margin:0;font:900 clamp(26px,3.4vw,42px)/1 "Orbitron",sans-serif;letter-spacing:.5em;padding-left:.5em;color:#effcff;
+  text-shadow:0 0 10px rgba(0,229,255,.8),0 0 36px rgba(0,229,255,.4)}
+.title p{margin:8px 0 0;font:600 11px "JetBrains Mono",monospace;letter-spacing:.3em;color:var(--muted);text-transform:uppercase}
+.reactor{position:relative;width:min(400px,72vw,46vh);aspect-ratio:1;flex:none}
+.reactor svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.spin{transform-origin:50% 50%;animation:spin 22s linear infinite}
+.spin.r{animation-direction:reverse;animation-duration:30s}
+.spin.f{animation-duration:8s}
+.spin.ff{animation-duration:4s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hs{stroke:var(--cyan);transition:stroke .4s}
+.glow{filter:drop-shadow(0 0 5px rgba(0,229,255,.8))}
+.core{position:absolute;inset:31%;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle,rgba(0,229,255,.34),rgba(0,229,255,.08) 55%,transparent 70%);
+  box-shadow:0 0 60px rgba(0,229,255,.25),inset 0 0 40px rgba(0,229,255,.25);transition:all .4s;animation:breathe 3.6s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 0 90px rgba(0,229,255,.4),inset 0 0 55px rgba(0,229,255,.35)}}
+.core .state{font:700 10px "Orbitron",sans-serif;letter-spacing:.3em;color:var(--cyan);text-shadow:var(--glow)}
+.core .big{font:700 20px "Rajdhani",sans-serif;margin-top:4px;max-width:150px;word-break:break-word;color:#fff}
+.wave{display:flex;gap:3px;justify-content:center;align-items:center;height:20px;margin-top:6px}
+.wave i{display:block;width:3px;height:4px;background:var(--cyan);border-radius:2px;box-shadow:0 0 6px var(--cyan)}
+.reactor.fire .wave i,.reactor.fail .wave i{animation:eq .5s ease-in-out infinite alternate}
+.wave i:nth-child(2n){animation-delay:.1s!important}.wave i:nth-child(3n){animation-delay:.22s!important}.wave i:nth-child(4n){animation-delay:.34s!important}
+@keyframes eq{from{height:4px}to{height:20px}}
+.reactor.fire{--cyan:var(--amber)} .reactor.fire .hs{stroke:var(--amber)}
+.reactor.fire .core{background:radial-gradient(circle,rgba(255,181,71,.42),rgba(255,181,71,.08) 55%,transparent 70%);box-shadow:0 0 80px rgba(255,181,71,.35),inset 0 0 50px rgba(255,181,71,.3)}
+.reactor.fire .spin{animation-duration:2.4s}.reactor.fire .spin.r{animation-duration:3.4s}
+.reactor.deny,.reactor.fail{--cyan:var(--red)} .reactor.deny .hs,.reactor.fail .hs{stroke:var(--red)}
+.reactor.deny .core,.reactor.fail .core{background:radial-gradient(circle,rgba(255,77,109,.45),rgba(255,77,109,.08) 55%,transparent 70%);box-shadow:0 0 80px rgba(255,77,109,.35),inset 0 0 50px rgba(255,77,109,.3)}
+
+/* transcript */
+.transcript{width:100%;max-width:640px;text-align:center;padding:14px 20px}
+.transcript .who{font:600 10px "JetBrains Mono",monospace;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.transcript .cmd{font-size:24px;font-weight:600;color:#fff;margin-top:4px;min-height:32px}
+.transcript .cmd q{color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.5)}
+.transcript .res{color:var(--muted);margin-top:4px;min-height:22px;font-size:16px}
+.transcript .res.badtxt{color:#ff8fa3}
+.hint{font:600 12px "JetBrains Mono",monospace;color:var(--dim);letter-spacing:.06em;min-height:16px;transition:opacity .4s}
+.hint b{color:var(--muted);font-weight:600}
+
+/* ---------- right column ---------- */
+.dls{display:flex;flex-direction:column;gap:8px;max-height:180px;overflow:auto}
+.dl{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 11px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.22)}
+.dl b{display:block;font-weight:600;color:#fff}
+.dl small{color:var(--muted);font:11px "JetBrains Mono",monospace}
+.dl.soon{border-color:rgba(255,181,71,.6);background:rgba(255,181,71,.07)}
+.dl.late{border-color:rgba(255,77,109,.6);background:rgba(255,77,109,.07)}
+.dl .btn{padding:7px 9px}
+.add{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.add input{font:inherit;font-size:14px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:#fff;outline:none;min-width:0}
+.add input:focus{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.25)}
+.add input::placeholder{color:#4a6a7c}
+.add .btn{grid-column:1/-1}
+.msg{font-size:14px;color:var(--muted);min-height:18px;margin-top:6px}
+
+.timeline{flex:1;min-height:0;max-height:460px;overflow:auto;padding:2px 4px 2px 0;position:relative}
+.timeline::-webkit-scrollbar,.dls::-webkit-scrollbar{width:5px}.timeline::-webkit-scrollbar-thumb,.dls::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+.ev{position:relative;padding:0 0 14px 22px}
+.ev::before{content:"";position:absolute;left:5px;top:14px;bottom:-2px;width:1px;background:linear-gradient(var(--line2),transparent)}
+.ev:last-child::before{display:none}
+.ev .node{position:absolute;left:0;top:4px;width:11px;height:11px;border-radius:50%;border:2px solid var(--cyan);background:var(--bg);box-shadow:0 0 8px var(--cyan)}
+.ev.failed .node,.ev.refused .node{border-color:var(--red);box-shadow:0 0 8px var(--red)}
+.ev.new{animation:flash 1.6s ease-out}
+@keyframes flash{from{background:linear-gradient(90deg,rgba(0,229,255,.18),transparent)}}
+.ev .top{display:flex;justify-content:space-between;gap:8px;font:11px "JetBrains Mono",monospace;color:var(--muted)}
+.ev .act{color:var(--cyan);text-transform:uppercase;letter-spacing:.06em}
+.ev.failed .act,.ev.refused .act{color:var(--red)}
+.ev .in{color:#fff;margin-top:2px}
+.ev .out{color:var(--muted);font-size:14px}
+.ev.failed .out{color:#ff8fa3}
+.empty{color:var(--muted);font-size:15px;text-align:center;padding:18px 0}
+
+/* ---------- dock ---------- */
+.dock{display:flex;gap:8px;overflow-x:auto;min-height:max-content;padding:10px;border-radius:20px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px);scrollbar-width:none}
+.dock::-webkit-scrollbar{display:none}
+.cap{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:92px;padding:10px 6px;border-radius:14px;border:1px solid transparent;
+  font-size:12px;text-align:center;color:var(--muted);line-height:1.15;transition:all .3s}
+.cap .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;background:linear-gradient(145deg,rgba(0,229,255,.14),rgba(139,92,246,.12));border:1px solid var(--line)}
+.cap:hover{color:var(--ink);border-color:var(--line)}
+.cap.hot{color:#fff;border-color:rgba(255,181,71,.7);background:rgba(255,181,71,.1);box-shadow:0 0 24px rgba(255,181,71,.3);transform:translateY(-3px)}
+.cap.hotbad{color:#fff;border-color:rgba(255,77,109,.7);background:rgba(255,77,109,.1);box-shadow:0 0 24px rgba(255,77,109,.3)}
+
+/* ---------- responsive ---------- */
+@media (min-width:1181px) and (min-height:900px){
+  .app{grid-template-rows:auto minmax(0,1fr) auto;height:100vh}
+  .col{overflow:auto}
+  .timeline{max-height:none}
+}
+@media (max-width:1180px){
+  .main{grid-template-columns:1fr 1fr}
+  .stage{grid-column:1/-1;order:-1}
+  .timeline{max-height:420px}
+}
+@media (max-width:720px){
+  .app{padding:10px 12px 14px}
+  .main{grid-template-columns:1fr}
+  .top{border-radius:18px;flex-wrap:wrap}
+  .pills{margin-left:0;justify-content:flex-start}
+  .clock{width:100%;padding:0}
+  .reactor{width:min(320px,84vw)}
+  .add{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="bgfx" aria-hidden="true"></div>
+<div class="scan" aria-hidden="true"></div>
+<svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f80ff"/><stop offset="1" stop-color="#00e5ff"/></linearGradient></defs></svg>
+
+<div class="app">
+  <header class="top">
+    <div class="logo"><span class="mark"></span>SAARA</div>
+    <div class="pills">
+      <span class="pill" id="pLink"><span class="dot ok"></span>LINK <b>ONLINE</b></span>
+      <span class="pill" id="pTunnel"><span class="dot warn"></span>TUNNEL <b>—</b></span>
+      <span class="pill" id="pLock"><span class="dot warn"></span>OWNER LOCK <b>—</b></span>
+      <span class="pill" id="pOut"><span class="dot warn"></span>CALL-BACK <b>—</b></span>
+    </div>
+    <span class="clock" id="clock"></span>
+  </header>
+
+  <div class="main">
+    <!-- left: telemetry -->
+    <section class="col">
+      <div class="card">
+        <div class="h">Telemetry <small id="host">—</small></div>
+        <div class="gauges">
+          <div class="gauge" id="gCpu"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42" fill="none" stroke-width="7"/><circle class="val" cx="50" cy="50" r="42" fill="none" stroke-width="7" stroke-dasharray="263.9" stroke-dashoffset="263.9"/></svg><div class="num"><span>—</span><small>CPU</small></div></div>
+          <div class="gauge" id="gRam"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42" fill="none" stroke-width="7"/><circle class="val" cx="50" cy="50" r="42" fill="none" stroke-width="7" stroke-dasharray="263.9" stroke-dashoffset="263.9"/></svg><div class="num"><span>—</span><small>RAM</small></div></div>
+          <div class="gauge" id="gBat"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42" fill="none" stroke-width="7"/><circle class="val" cx="50" cy="50" r="42" fill="none" stroke-width="7" stroke-dasharray="263.9" stroke-dashoffset="263.9"/></svg><div class="num"><span>—</span><small id="batLbl">BATTERY</small></div></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span>Actions</span><i id="count">0</i></div>
+          <div class="stat"><span>Success rate</span><i id="rate">—</i></div>
+          <div class="stat"><span>Failed</span><i id="failed">0</i></div>
+          <div class="stat"><span>Refused callers</span><i id="refused">0</i></div>
+          <div class="stat"><span>Server uptime</span><i id="uptime">—</i></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="h">Sarvam tool URL</div>
+        <div class="tunnel off" id="tunnel">Tunnel not running. Start cloudflared.</div>
+        <div class="row"><button class="btn" id="copyUrl" type="button">Copy URL</button></div>
+        <div class="msg" id="copyMsg"></div>
+      </div>
+      <div class="card">
+        <div class="h">Call Saara</div>
+        <div class="callno" id="phone">—</div>
+        <div class="sub">English, Hindi, Telugu or any mix.</div>
+      </div>
+    </section>
+
+    <!-- center: core -->
+    <section class="stage">
+      <div class="title"><h1>SAARA</h1><p>Your laptop · on a phone call</p></div>
+      <div class="reactor" id="reactor" aria-hidden="true">
+        <svg viewBox="0 0 200 200">
+          <defs>
+            <radialGradient id="rg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#00e5ff" stop-opacity=".16"/><stop offset="1" stop-color="#00e5ff" stop-opacity="0"/></radialGradient>
+            <linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00e5ff" stop-opacity="0"/><stop offset="1" stop-color="#00e5ff" stop-opacity=".45"/></linearGradient>
+          </defs>
+          <circle cx="100" cy="100" r="99" fill="url(#rg)"/>
+          <g class="spin glow"><circle class="hs" cx="100" cy="100" r="97" fill="none" stroke-opacity=".7" stroke-width=".8" stroke-dasharray="1 3"/></g>
+          <g class="spin r" id="ticks"></g>
+          <g class="spin r"><circle class="hs" cx="100" cy="100" r="84" fill="none" stroke-opacity=".35" stroke-width="7" stroke-dasharray="46 10 8 10"/></g>
+          <g class="spin f glow"><circle class="hs" cx="100" cy="100" r="74" fill="none" stroke-width="1.6" stroke-dasharray="110 24 18 24"/></g>
+          <g class="spin ff"><circle class="hs" cx="100" cy="100" r="66" fill="none" stroke-opacity=".5" stroke-width="1" stroke-dasharray="4 4"/></g>
+          <g class="spin"><circle class="hs" cx="100" cy="100" r="60" fill="none" stroke-opacity=".22" stroke-width="10" stroke-dasharray="2 4"/></g>
+          <g class="spin f"><path d="M100 100 L100 6 A94 94 0 0 1 166 33 Z" fill="url(#sw)" opacity=".5"/></g>
+          <g class="glow"><circle class="hs" cx="100" cy="100" r="54" fill="none" stroke-width=".8" stroke-opacity=".9"/></g>
+        </svg>
+        <div class="core"><div>
+          <div class="state" id="state">STANDBY</div>
+          <div class="big" id="big">Ready</div>
+          <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div></div>
+      </div>
+      <div class="card transcript">
+        <div class="who" id="who">Last command</div>
+        <div class="cmd" id="cmd">Waiting for your call…</div>
+        <div class="res" id="res"></div>
+      </div>
+      <div class="hint" id="hint"></div>
+    </section>
+
+    <!-- right: deadlines + timeline -->
+    <section class="col">
+      <div class="card">
+        <div class="h">Deadlines <small id="dlCount">0 open</small></div>
+        <div id="dls" class="dls"><div class="empty">No deadlines yet.</div></div>
+        <form id="addDl" class="add">
+          <input id="dlTitle" placeholder="What is due?" required>
+          <input id="dlWhen" placeholder="When? tomorrow 5 pm" required>
+          <button class="btn solid" type="submit">Add deadline</button>
+        </form>
+        <div class="row"><button id="testCall" class="btn" type="button">📞 Test call-back</button></div>
+        <div class="msg" id="watchMsg"></div>
+      </div>
+      <div class="card grow">
+        <div class="h">Activity <small id="lastAt">—</small></div>
+        <div class="timeline" id="feed"><div class="empty">No actions yet. Call the number.</div></div>
+      </div>
+    </section>
+  </div>
+
+  <nav class="dock" id="caps" aria-label="Capabilities"></nav>
+</div>
+
+<script>
+const CAPS = {
+  open_website:['🌐','Websites'], web_search:['🔎','Google search'], play_youtube:['▶️','YouTube'],
+  open_app:['🗂️','Apps'], find_file:['📂','Find files'], media_control:['🎚️','Music & volume'],
+  run_routine:['⚡','Modes'], set_timer:['⏱️','Timers'], focus_session:['🎯','Focus'],
+  take_note:['📝','Notes'], read_notes:['📖','Read notes'], show_notes:['🗒️','Show notes'],
+  draft_email:['✉️','Email drafts'], directions:['🧭','Directions'], weather:['⛅','Weather'],
+  speak_on_laptop:['🔊','Speak'], take_screenshot:['📸','Screenshot'], system_status:['🔋','Battery & time'],
+  lock_screen:['🔒','Lock'], add_deadline:['⏰','Deadlines'], list_deadlines:['📋','What is due'],
+  finish_deadline:['✅','Mark done'], classroom_due:['🎓','Classroom'], submit_assignment:['📤','Upload work'],
+  call_owner:['📞','Calls you'],
+};
+const NICE = Object.fromEntries(Object.entries(CAPS).map(([k,v])=>[k,v[1]]));
+const HINTS = ['Search Google for IPL score','Open Google Classroom',"What's due on Classroom?",'Play Arijit Singh on YouTube',
+  'Remind me, DBMS project due tomorrow 5 pm','5 minute ka timer lagao chai ke liye','Open my resume','Work mode on karo','How much battery?'];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = id => document.getElementById(id);
+// A result that admits it did not work counts as a failure, even though the server answered.
+const isFail = e => !e.refused && /^ERROR|CALL FAILED|didn't open|did not start|could not|couldn't|can't open/i.test(e.result || '');
+const pill = (id, cls, text) => { $(id).innerHTML = `<span class="dot ${cls}"></span>${$(id).dataset.k} <b>${esc(text)}</b>`; };
+['pLink','pTunnel','pLock','pOut'].forEach(id => $(id).dataset.k = $(id).textContent.trim().split(' ').slice(0, id==='pLock'?2:1).join(' '));
+let seen = null, idle, tunnelUrl = '';
+
+$('ticks').innerHTML = Array.from({length:72},(_,i)=>{const a=i*5*Math.PI/180,l=i%6?3:7,r1=91,r2=r1-l;
+  return `<line class="hs" x1="${100+r1*Math.sin(a)}" y1="${100-r1*Math.cos(a)}" x2="${100+r2*Math.sin(a)}" y2="${100-r2*Math.cos(a)}" stroke-width="${i%6?.5:1.2}" stroke-opacity="${i%6?.45:.9}"/>`}).join('');
+
+const clock = () => { $('clock').textContent = new Date().toLocaleString('en-IN',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}).toUpperCase(); };
+setInterval(clock, 1000); clock();
+
+let h = 0; const hint = () => { $('hint').style.opacity = 0; setTimeout(()=>{ $('hint').innerHTML = `TRY SAYING › <b>“${esc(HINTS[h++ % HINTS.length])}”</b>`; $('hint').style.opacity = 1; }, 400); };
+setInterval(hint, 5000); hint();
+
+fetch('/status').then(r=>r.json()).then(s=>{
+  $('phone').textContent = s.phone || 'Your Sarvam number';
+  pill('pLock', s.lock ? 'ok' : 'warn', s.lock ? 'ON ' + s.owner : 'OFF');
+  $('caps').innerHTML = s.actions.concat('call_owner').filter((a,i,all)=>CAPS[a] && all.indexOf(a)===i)
+    .map(a=>`<div class="cap" data-a="${a}" title="${esc(a)}"><span class="ic">${CAPS[a][0]}</span>${esc(CAPS[a][1])}</div>`).join('');
+}).catch(()=>{});
+
+function setGauge(id, pct, label){
+  const g = $(id), v = Math.max(0, Math.min(100, pct ?? 0));
+  g.querySelector('.val').style.strokeDashoffset = 263.9 * (1 - v / 100);
+  g.querySelector('.num span').textContent = pct == null ? '—' : Math.round(pct) + '%';
+  if (label) g.querySelector('small').textContent = label;
+}
+const dur = s => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`;
+async function telemetry(){
+  try{
+    const t = await (await fetch('/telemetry')).json();
+    setGauge('gCpu', t.cpu); $('gCpu').classList.toggle('hot', t.cpu > 80);
+    setGauge('gRam', t.ram); $('gRam').classList.toggle('hot', t.ram > 85);
+    setGauge('gBat', t.battery?.pct, t.battery ? (t.battery.charging ? 'CHARGING' : 'BATTERY') : 'NO BATTERY');
+    $('gBat').classList.toggle('low', !!t.battery && !t.battery.charging && t.battery.pct <= 20);
+    $('host').textContent = t.host; $('uptime').textContent = dur(t.uptime);
+    tunnelUrl = t.tunnel ? `https://${t.tunnel}/action` : '';
+    $('tunnel').textContent = tunnelUrl || 'Tunnel not running. Start cloudflared.';
+    $('tunnel').classList.toggle('off', !tunnelUrl);
+    pill('pTunnel', t.tunnel ? 'ok' : 'warn', t.tunnel ? 'UP' : 'DOWN');
+  }catch{}
+}
+setInterval(telemetry, 3000); telemetry();
+$('copyUrl').addEventListener('click', async () => {
+  if (!tunnelUrl) { $('copyMsg').textContent = 'Nothing to copy yet. Start the tunnel first.'; return; }
+  try { await navigator.clipboard.writeText(tunnelUrl); $('copyMsg').textContent = 'Copied. Paste it into the laptop_action tool URL.'; }
+  catch { $('copyMsg').textContent = 'Select the address above and copy it.'; }
+});
+
+function pulse(e){
+  const r = $('reactor'), bad = isFail(e);
+  r.classList.remove('fire','deny','fail'); void r.offsetWidth;
+  r.classList.add(e.refused ? 'deny' : bad ? 'fail' : 'fire');
+  $('state').textContent = e.refused ? 'REFUSED' : bad ? 'FAILED' : 'EXECUTING';
+  $('big').textContent = e.refused ? 'Not owner' : (NICE[e.action] || e.action);
+  $('who').textContent = `${e.caller || 'Caller'} · ${e.at}`;
+  $('cmd').innerHTML = e.input && e.input !== 'none' ? `<q>${esc(e.input)}</q>` : esc(NICE[e.action] || e.action);
+  $('res').textContent = e.result || '';
+  $('res').className = 'res' + (bad || e.refused ? ' badtxt' : '');
+  document.querySelectorAll('.cap').forEach(c=>{ c.classList.toggle('hot', c.dataset.a === e.action && !bad); c.classList.toggle('hotbad', c.dataset.a === e.action && bad); });
+  document.querySelector(`.cap[data-a="${e.action}"]`)?.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+  clearTimeout(idle);
+  idle = setTimeout(()=>{ r.classList.remove('fire','deny','fail'); $('state').textContent='STANDBY'; $('big').textContent='Ready';
+    document.querySelectorAll('.cap.hot,.cap.hotbad').forEach(c=>c.classList.remove('hot','hotbad')); }, 6000);
+}
+
+async function tick(){
+  try{
+    const a = await (await fetch('/activity')).json();
+    pill('pLink', 'ok', 'ONLINE');
+    const key = JSON.stringify(a[0] || null);
+    if (key === seen) return;
+    const first = seen === null; seen = key;
+    const done = a.filter(e=>!e.refused), failed = done.filter(isFail).length;
+    $('count').textContent = done.length;
+    $('failed').innerHTML = failed ? `<span class="bad">${failed}</span>` : '0';
+    $('refused').textContent = a.filter(e=>e.refused).length;
+    $('rate').textContent = done.length ? Math.round(100 * (done.length - failed) / done.length) + '%' : '—';
+    $('lastAt').textContent = a[0] ? 'last ' + a[0].at : '—';
+    $('feed').innerHTML = a.length ? a.map((e,i)=>`<div class="ev ${e.refused?'refused':isFail(e)?'failed':''} ${!first&&i===0?'new':''}">
+      <span class="node"></span>
+      <div class="top"><span class="act">${esc(NICE[e.action] || e.action)}</span><span>${e.caller?esc(e.caller)+' · ':''}${esc(e.at)}</span></div>
+      ${e.input && e.input!=='none' ? `<div class="in">“${esc(e.input)}”</div>` : ''}<div class="out">${esc(e.result)}</div></div>`).join('')
+      : '<div class="empty">No actions yet. Call the number.</div>';
+    if (!first && a[0]) pulse(a[0]);
+  }catch{ pill('pLink', 'bad', 'OFFLINE'); }
+}
+setInterval(tick, 700); tick();
+
+const left = m => m < 0 ? 'overdue' : m < 60 ? `${Math.round(m)} min left` : m < 2880 ? `${Math.round(m/60)} h left` : `${Math.round(m/1440)} days left`;
+async function watch(){
+  try{
+    const s = await (await fetch('/monitor')).json();
+    pill('pOut', s.configured ? 'ok' : 'warn', s.configured ? 'READY' : 'DRY RUN');
+    $('dlCount').textContent = `${s.deadlines.length} open`;
+    $('dls').innerHTML = s.deadlines.length ? s.deadlines.map(d=>`<div class="dl ${d.minutesLeft<0?'late':d.minutesLeft<180?'soon':''}">
+      <div><b>${esc(d.title)}</b><small>${new Date(d.due).toLocaleString('en-IN',{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})} · ${left(d.minutesLeft)}</small></div>
+      <button class="btn" data-id="${esc(d.id)}">Done</button></div>`).join('') : '<div class="empty">No deadlines yet. Say “remind me…” on a call.</div>';
+  }catch{}
+}
+async function post(path, body){ const r = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}); return r.json(); }
+$('dls').addEventListener('click', async e => { const id = e.target.dataset?.id; if (!id) return; $('watchMsg').textContent = (await post('/monitor/done',{id})).result; watch(); });
+$('addDl').addEventListener('submit', async e => { e.preventDefault(); const r = await post('/monitor/add',{title:$('dlTitle').value, when:$('dlWhen').value}); $('watchMsg').textContent = r.result; if (!/couldn|passed|Tell me/.test(r.result)) { $('dlTitle').value=''; $('dlWhen').value=''; } watch(); });
+$('testCall').addEventListener('click', async () => { $('watchMsg').textContent = 'Calling your phone…'; const r = await post('/monitor/test-call'); $('watchMsg').textContent = r.ok ? 'Calling you now. Pick up!' : r.dryRun ? 'Dry run: add the Sarvam outbound keys to .env to place real calls.' : `Call failed (${r.status || r.error}).`; });
+setInterval(watch, 5000); watch();
+</script>
+</body>
+</html>
