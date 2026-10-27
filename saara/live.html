@@ -31,12 +31,36 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
   transform:perspective(600px) rotateX(62deg);transform-origin:bottom;mask-image:linear-gradient(transparent,#000 70%);animation:grid 6s linear infinite}
 @keyframes grid{to{background-position:0 60px,0 0}}
 .scan{position:fixed;inset:0;z-index:40;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.3}
+/* soft light that follows the mouse, and the particle layer (dust, bursts, shockwaves) */
+.cursor{position:fixed;left:0;top:0;width:560px;height:560px;margin:-280px 0 0 -280px;border-radius:50%;pointer-events:none;z-index:0;
+  background:radial-gradient(circle,rgba(0,229,255,.08),transparent 65%);transform:translate3d(var(--cx,50vw),var(--cy,40vh),0);transition:transform .3s ease-out}
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none}
+
+/* boot sequence, shown once per browser tab */
+.boot{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#06192b,#02060b 70%);cursor:pointer;transition:opacity .7s,visibility 0s .7s}
+.boot.done{opacity:0;visibility:hidden}
+.bootin{display:flex;flex-direction:column;align-items:center;gap:18px;width:min(360px,80vw)}
+.bootlogo{position:relative;width:150px;height:150px;display:grid;place-items:center;font:900 20px "Orbitron",sans-serif;letter-spacing:.35em;padding-left:.35em;color:#fff;text-shadow:var(--glow)}
+.bootlogo::before,.bootlogo::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid transparent;border-top-color:var(--cyan);border-right-color:var(--cyan);box-shadow:0 0 18px rgba(0,229,255,.25);animation:spin 1.1s linear infinite}
+.bootlogo::after{inset:14px;border-top-color:var(--violet);border-right-color:transparent;border-left-color:var(--violet);animation-duration:1.6s;animation-direction:reverse}
+.bootlines{width:100%;min-height:110px;font:600 12px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--muted)}
+.bootlines div{display:flex;justify-content:space-between;animation:rise .35s ease-out backwards}
+.bootlines span{color:var(--green)}
+.bootbar{width:100%;height:3px;border-radius:3px;background:rgba(0,229,255,.12);overflow:hidden}
+.bootbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:var(--glow);transform-origin:left;animation:load 1.9s cubic-bezier(.4,0,.2,1) both}
+@keyframes load{from{transform:scaleX(0)}}
+
+/* entrance after boot: everything rises into place one after another */
+@keyframes rise{from{opacity:0;translate:0 26px}}
+@keyframes materialize{from{opacity:0;scale:.55;filter:blur(10px)}}
+.ready .topbar,.ready .card,.ready .title,.ready .dock{animation:rise .9s cubic-bezier(.2,.8,.2,1) backwards}
+.ready .reactor{animation:materialize 1.3s cubic-bezier(.2,.8,.2,1) backwards}
 
 /* The page grows with its content; only tall screens get the locked one-screen layout (see media query below). */
 .app{position:relative;z-index:1;display:grid;grid-template-rows:auto auto auto;min-height:100vh;max-width:1600px;margin:0 auto;padding:14px 18px 16px;gap:14px}
 
 /* ---------- top bar ---------- */
-.top{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px)}
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(14px)}
 .logo{display:flex;align-items:center;gap:10px;font:900 18px "Orbitron",sans-serif;letter-spacing:.3em;color:#fff;text-shadow:var(--glow)}
 .logo .mark{width:28px;height:28px;border-radius:50%;border:2px solid var(--cyan);box-shadow:var(--glow),inset 0 0 10px rgba(0,229,255,.6);position:relative}
 .logo .mark::after{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--cyan);box-shadow:var(--glow);animation:pulse 2.4s ease-in-out infinite}
@@ -58,6 +82,12 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 .card::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
   background:linear-gradient(135deg,rgba(0,229,255,.55),transparent 35%,transparent 65%,rgba(139,92,246,.45));
   -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+/* holographic depth: cards tilt toward the mouse and catch a moving glare */
+.card{transform:perspective(1000px) rotateX(var(--tx,0deg)) rotateY(var(--ty,0deg));transition:transform .6s cubic-bezier(.2,.8,.2,1),box-shadow .3s}
+.card:hover{transition:transform .12s ease-out,box-shadow .3s;box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 32px rgba(0,229,255,.13),inset 0 1px 0 rgba(255,255,255,.06)}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(0,229,255,.11),transparent 45%)}
+.card:hover::after{opacity:1}
 .h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;
   font:700 11px "Orbitron",sans-serif;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.45)}
 .h small{font:600 10px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--muted);text-shadow:none}
@@ -93,11 +123,40 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 /* ---------- center stage ---------- */
 .stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:0;padding:6px 0}
 .title{text-align:center}
-.title h1{margin:0;font:900 clamp(26px,3.4vw,42px)/1 "Orbitron",sans-serif;letter-spacing:.5em;padding-left:.5em;color:#effcff;
+.title h1{position:relative;margin:0;font:900 clamp(26px,3.4vw,42px)/1 "Orbitron",sans-serif;letter-spacing:.5em;padding-left:.5em;color:#effcff;
   text-shadow:0 0 10px rgba(0,229,255,.8),0 0 36px rgba(0,229,255,.4)}
+/* every few seconds the title glitches like a hologram losing signal */
+.title h1::before,.title h1::after{content:attr(data-text);position:absolute;inset:0;padding-left:.5em;opacity:0;text-shadow:none;mix-blend-mode:screen;pointer-events:none}
+.title h1::before{color:#ff2bd6;animation:glitch 7s steps(1) infinite}
+.title h1::after{color:var(--cyan);animation:glitch 7s steps(1) .06s infinite}
+@keyframes glitch{0%,92%,100%{opacity:0;transform:none;clip-path:none}93%{opacity:.8;transform:translate(-4px,1px);clip-path:inset(8% 0 58% 0)}
+  95%{opacity:.8;transform:translate(4px,-1px);clip-path:inset(62% 0 6% 0)}97%{opacity:.6;transform:translate(-2px,0);clip-path:inset(36% 0 36% 0)}}
 .title p{margin:8px 0 0;font:600 11px "JetBrains Mono",monospace;letter-spacing:.3em;color:var(--muted);text-transform:uppercase}
-.reactor{position:relative;width:min(400px,72vw,46vh);aspect-ratio:1;flex:none}
+.reactor{position:relative;z-index:2;width:min(400px,72vw,46vh);aspect-ratio:1;flex:none;perspective:1100px}
+/* The hologram is a 3D stack: rings at the back, the voice waveform in the middle, the core floating in front. It tilts toward the mouse. */
+.holo{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .reactor svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#ringWave{position:absolute;inset:0;width:100%;height:100%;transform:translateZ(22px);pointer-events:none}
+.gyro{position:absolute;inset:15%;transform-style:preserve-3d;transform:translateZ(12px);pointer-events:none}
+.gyro i{position:absolute;inset:0;border-radius:50%;border:1px solid var(--cyan);opacity:.55;box-shadow:0 0 14px rgba(0,229,255,.3),inset 0 0 14px rgba(0,229,255,.18);animation:gx 9s linear infinite}
+.gyro i:nth-child(2){inset:5%;border-color:var(--violet);animation:gy 13s linear infinite}
+.gyro i:nth-child(3){inset:11%;border-style:dashed;opacity:.45;animation:gz 7s linear infinite}
+@keyframes gx{from{transform:rotateX(72deg) rotateZ(0)}to{transform:rotateX(72deg) rotateZ(360deg)}}
+@keyframes gy{from{transform:rotateY(72deg) rotateZ(0)}to{transform:rotateY(72deg) rotateZ(360deg)}}
+@keyframes gz{from{transform:rotateX(58deg) rotateY(-42deg) rotateZ(0)}to{transform:rotateX(58deg) rotateY(-42deg) rotateZ(-360deg)}}
+.reactor.fire .gyro i{animation-duration:2.2s}.reactor.fire .gyro i:nth-child(2){animation-duration:3s}
+.hscan{position:absolute;inset:3%;border-radius:50%;overflow:hidden;pointer-events:none;transform:translateZ(30px)}
+.hscan::before{content:"";position:absolute;left:0;right:0;top:-22%;height:20%;background:linear-gradient(transparent,rgba(0,229,255,.16),transparent);animation:sweep 4.6s ease-in-out infinite}
+@keyframes sweep{to{top:102%}}
+/* projector under the hologram: a rotating disc and a flickering light beam */
+.holobase{position:relative;z-index:1;width:100%;height:40px;margin-top:-34px;pointer-events:none}
+.holobase .disc{position:absolute;left:50%;top:50%;width:min(300px,56vw,34vh);aspect-ratio:1;translate:-50% -50%;transform:perspective(700px) rotateX(78deg)}
+.disc i{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(0,229,255,.5);box-shadow:0 0 30px rgba(0,229,255,.25);animation:spin 14s linear infinite}
+.disc i:nth-child(2){inset:16%;border:1px solid rgba(139,92,246,.6);animation-duration:9s;animation-direction:reverse}
+.disc i:nth-child(3){inset:32%;border:0;box-shadow:none;background:radial-gradient(circle,rgba(0,229,255,.6),transparent 70%);animation:pulse 2.4s ease-in-out infinite}
+.holobase::before{content:"";position:absolute;left:50%;bottom:50%;width:min(280px,52vw,32vh);height:130px;translate:-50% 0;
+  background:linear-gradient(to top,rgba(0,229,255,.2),transparent);clip-path:polygon(32% 100%,68% 100%,100% 0,0 0);filter:blur(3px);animation:flick 5s infinite}
+@keyframes flick{0%,46%,54%,100%{opacity:.85}48%{opacity:.25}50%{opacity:.95}52%{opacity:.4}}
 .spin{transform-origin:50% 50%;animation:spin 22s linear infinite}
 .spin.r{animation-direction:reverse;animation-duration:30s}
 .spin.f{animation-duration:8s}
@@ -105,7 +164,7 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 @keyframes spin{to{transform:rotate(360deg)}}
 .hs{stroke:var(--cyan);transition:stroke .4s}
 .glow{filter:drop-shadow(0 0 5px rgba(0,229,255,.8))}
-.core{position:absolute;inset:31%;border-radius:50%;display:grid;place-items:center;text-align:center;
+.core{position:absolute;inset:31%;border-radius:50%;display:grid;place-items:center;text-align:center;transform:translateZ(48px);
   background:radial-gradient(circle,rgba(0,229,255,.34),rgba(0,229,255,.08) 55%,transparent 70%);
   box-shadow:0 0 60px rgba(0,229,255,.25),inset 0 0 40px rgba(0,229,255,.25);transition:all .4s;animation:breathe 3.6s ease-in-out infinite}
 @keyframes breathe{50%{box-shadow:0 0 90px rgba(0,229,255,.4),inset 0 0 55px rgba(0,229,255,.35)}}
@@ -129,6 +188,8 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 .transcript .cmd q{color:var(--cyan);text-shadow:0 0 10px rgba(0,229,255,.5)}
 .transcript .res{color:var(--muted);margin-top:4px;min-height:22px;font-size:16px}
 .transcript .res.badtxt{color:#ff8fa3}
+.res.typing::after{content:"▍";color:var(--cyan);margin-left:2px;animation:blink .7s infinite}
+#voice{display:block;width:100%;height:48px;margin-top:8px}
 .hint{font:600 12px "JetBrains Mono",monospace;color:var(--dim);letter-spacing:.06em;min-height:16px;transition:opacity .4s}
 .hint b{color:var(--muted);font-weight:600}
 
@@ -154,8 +215,9 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 .ev:last-child::before{display:none}
 .ev .node{position:absolute;left:0;top:4px;width:11px;height:11px;border-radius:50%;border:2px solid var(--cyan);background:var(--bg);box-shadow:0 0 8px var(--cyan)}
 .ev.failed .node,.ev.refused .node{border-color:var(--red);box-shadow:0 0 8px var(--red)}
-.ev.new{animation:flash 1.6s ease-out}
+.ev.new{animation:slidein .7s cubic-bezier(.2,.8,.2,1),flash 1.6s ease-out}
 @keyframes flash{from{background:linear-gradient(90deg,rgba(0,229,255,.18),transparent)}}
+@keyframes slidein{from{opacity:0;translate:28px 0}}
 .ev .top{display:flex;justify-content:space-between;gap:8px;font:11px "JetBrains Mono",monospace;color:var(--muted)}
 .ev .act{color:var(--cyan);text-transform:uppercase;letter-spacing:.06em}
 .ev.failed .act,.ev.refused .act{color:var(--red)}
@@ -170,7 +232,10 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 .cap{flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:92px;padding:10px 6px;border-radius:14px;border:1px solid transparent;
   font-size:12px;text-align:center;color:var(--muted);line-height:1.15;transition:all .3s}
 .cap .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:18px;background:linear-gradient(145deg,rgba(0,229,255,.14),rgba(139,92,246,.12));border:1px solid var(--line)}
-.cap:hover{color:var(--ink);border-color:var(--line)}
+.cap:hover{color:var(--ink);border-color:var(--line);transform:translateY(-4px) scale(1.04)}
+.cap:hover .ic{box-shadow:var(--glow)}
+.cap.hot .ic{animation:ping 1s ease-out 3}
+@keyframes ping{from{box-shadow:0 0 0 0 rgba(255,181,71,.65)}to{box-shadow:0 0 0 16px rgba(255,181,71,0)}}
 .cap.hot{color:#fff;border-color:rgba(255,181,71,.7);background:rgba(255,181,71,.1);box-shadow:0 0 24px rgba(255,181,71,.3);transform:translateY(-3px)}
 .cap.hotbad{color:#fff;border-color:rgba(255,77,109,.7);background:rgba(255,77,109,.1);box-shadow:0 0 24px rgba(255,77,109,.3)}
 
@@ -188,7 +253,7 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 @media (max-width:720px){
   .app{padding:10px 12px 14px}
   .main{grid-template-columns:1fr}
-  .top{border-radius:18px;flex-wrap:wrap}
+  .topbar{border-radius:18px;flex-wrap:wrap}
   .pills{margin-left:0;justify-content:flex-start}
   .clock{width:100%;padding:0}
   .reactor{width:min(320px,84vw)}
@@ -198,12 +263,17 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 </style>
 </head>
 <body>
+<div class="boot" id="boot" aria-hidden="true"><div class="bootin">
+  <div class="bootlogo">SAARA</div><div class="bootlines" id="bootLines"></div><div class="bootbar"><i></i></div>
+</div></div>
 <div class="bgfx" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+<canvas id="fx" aria-hidden="true"></canvas>
 <div class="scan" aria-hidden="true"></div>
 <svg width="0" height="0" style="position:absolute"><defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2f80ff"/><stop offset="1" stop-color="#00e5ff"/></linearGradient></defs></svg>
 
 <div class="app">
-  <header class="top">
+  <header class="topbar">
     <div class="logo"><span class="mark"></span>SAARA</div>
     <div class="pills">
       <span class="pill" id="pLink"><span class="dot ok"></span>LINK <b>ONLINE</b></span>
@@ -247,8 +317,8 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
 
     <!-- center: core -->
     <section class="stage">
-      <div class="title"><h1>SAARA</h1><p>Your laptop · on a phone call</p></div>
-      <div class="reactor" id="reactor" aria-hidden="true">
+      <div class="title"><h1 data-text="SAARA">SAARA</h1><p>Your laptop · on a phone call</p></div>
+      <div class="reactor" id="reactor" aria-hidden="true"><div class="holo" id="holo">
         <svg viewBox="0 0 200 200">
           <defs>
             <radialGradient id="rg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#00e5ff" stop-opacity=".16"/><stop offset="1" stop-color="#00e5ff" stop-opacity="0"/></radialGradient>
@@ -264,16 +334,21 @@ body{background:var(--bg);color:var(--ink);font:500 16px/1.4 "Rajdhani",system-u
           <g class="spin f"><path d="M100 100 L100 6 A94 94 0 0 1 166 33 Z" fill="url(#sw)" opacity=".5"/></g>
           <g class="glow"><circle class="hs" cx="100" cy="100" r="54" fill="none" stroke-width=".8" stroke-opacity=".9"/></g>
         </svg>
+        <div class="gyro"><i></i><i></i><i></i></div>
+        <canvas id="ringWave"></canvas>
+        <div class="hscan"></div>
         <div class="core"><div>
           <div class="state" id="state">STANDBY</div>
           <div class="big" id="big">Ready</div>
           <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         </div></div>
-      </div>
+      </div></div>
+      <div class="holobase" aria-hidden="true"><div class="disc"><i></i><i></i><i></i></div></div>
       <div class="card transcript">
         <div class="who" id="who">Last command</div>
         <div class="cmd" id="cmd">Waiting for your call…</div>
         <div class="res" id="res"></div>
+        <canvas id="voice" aria-hidden="true"></canvas>
       </div>
       <div class="hint" id="hint"></div>
     </section>
@@ -343,7 +418,13 @@ fetch('/status').then(r=>r.json()).then(s=>{
 function setGauge(id, pct, label){
   const g = $(id), v = Math.max(0, Math.min(100, pct ?? 0));
   g.querySelector('.val').style.strokeDashoffset = 263.9 * (1 - v / 100);
-  g.querySelector('.num span').textContent = pct == null ? '—' : Math.round(pct) + '%';
+  const span = g.querySelector('.num span');
+  if (pct == null) span.textContent = '—';
+  else { // count up to the new value instead of jumping
+    const from = g._v ?? 0, to = Math.round(pct), t0 = performance.now(); g._v = to;
+    const step = n => { const k = Math.min(1, (n - t0) / 700); span.textContent = Math.round(from + (to - from) * (1 - (1 - k) ** 3)) + '%'; if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
   if (label) g.querySelector('small').textContent = label;
 }
 const dur = s => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor(s%3600/60)}m`;
@@ -376,8 +457,9 @@ function pulse(e){
   $('big').textContent = e.refused ? 'Not owner' : (NICE[e.action] || e.action);
   $('who').textContent = `${e.caller || 'Caller'} · ${e.at}`;
   $('cmd').innerHTML = e.input && e.input !== 'none' ? `<q>${esc(e.input)}</q>` : esc(NICE[e.action] || e.action);
-  $('res').textContent = e.result || '';
   $('res').className = 'res' + (bad || e.refused ? ' badtxt' : '');
+  typeOut($('res'), e.result || '');
+  talkUntil = performance.now() + 4500; burst();
   document.querySelectorAll('.cap').forEach(c=>{ c.classList.toggle('hot', c.dataset.a === e.action && !bad); c.classList.toggle('hotbad', c.dataset.a === e.action && bad); });
   document.querySelector(`.cap[data-a="${e.action}"]`)?.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
   clearTimeout(idle);
@@ -424,6 +506,126 @@ $('dls').addEventListener('click', async e => { const id = e.target.dataset?.id;
 $('addDl').addEventListener('submit', async e => { e.preventDefault(); const r = await post('/monitor/add',{title:$('dlTitle').value, when:$('dlWhen').value}); $('watchMsg').textContent = r.result; if (!/couldn|passed|Tell me/.test(r.result)) { $('dlTitle').value=''; $('dlWhen').value=''; } watch(); });
 $('testCall').addEventListener('click', async () => { $('watchMsg').textContent = 'Calling your phone…'; const r = await post('/monitor/test-call'); $('watchMsg').textContent = r.ok ? 'Calling you now. Pick up!' : r.dryRun ? 'Dry run: add the Sarvam outbound keys to .env to place real calls.' : `Call failed (${r.status || r.error}).`; });
 setInterval(watch, 5000); watch();
+
+// ---------- motion: boot, voice waveforms, particles, holographic tilt ----------
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TONE = { idle:[0,229,255], fire:[255,181,71], bad:[255,77,109] };
+const tone = () => { const c = $('reactor').classList; return c.contains('fire') ? TONE.fire : c.contains('fail') || c.contains('deny') ? TONE.bad : TONE.idle; };
+const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+let energy = .1, talkUntil = 0, typer;
+
+(function boot(){
+  const b = $('boot'), ready = () => { b.classList.add('done'); document.body.classList.add('ready'); };
+  // stagger the entrance so the panels arrive one after another
+  document.querySelectorAll('.topbar,.card,.title,.reactor,.dock').forEach((el, i) => el.style.animationDelay = i * 70 + 'ms');
+  let seenBoot = false; try { seenBoot = !!sessionStorage.getItem('saaraBoot'); sessionStorage.setItem('saaraBoot', '1'); } catch {}
+  if (RM || seenBoot) { b.remove(); ready(); return; }
+  ['Neural link','Voice channel','Telemetry grid','Owner lock','Action matrix'].forEach((l, i) =>
+    setTimeout(() => $('bootLines').insertAdjacentHTML('beforeend', `<div>${l}<span>ONLINE</span></div>`), 200 + i * 280));
+  const t = setTimeout(ready, 2100);
+  b.addEventListener('click', () => { clearTimeout(t); ready(); });
+})();
+
+function typeOut(el, text){
+  clearInterval(typer);
+  if (RM) { el.textContent = text; return; }
+  let i = 0; el.textContent = ''; el.classList.add('typing');
+  typer = setInterval(() => { el.textContent = text.slice(0, i += 2); if (i >= text.length) { clearInterval(typer); el.classList.remove('typing'); } }, 18);
+}
+
+// Canvases are sized from layout (offsetWidth), not getBoundingClientRect, so the 3D tilt doesn't resize them every frame.
+function fit(cv){
+  const d = devicePixelRatio || 1, w = cv.offsetWidth, h = cv.offsetHeight;
+  if (cv.width !== Math.round(w * d) || cv.height !== Math.round(h * d)) { cv.width = Math.round(w * d); cv.height = Math.round(h * d); }
+  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h); x.globalCompositeOperation = 'lighter';
+  return [x, w, h];
+}
+
+// circular voice waveform and spectrum bars around the core
+function drawRing(t){
+  const [x, w] = fit($('ringWave')), c = tone(), cx = w / 2, r0 = w * .245, amp = w * (.008 + .06 * energy);
+  for (let layer = 0; layer < 3; layer++){
+    x.beginPath();
+    for (let i = 0; i <= 180; i++){
+      const a = i / 180 * Math.PI * 2, ph = t * (1.4 + layer * .7) + layer * 2;
+      const r = r0 + amp * (layer ? .7 : 1) * (Math.sin(a * 5 + ph) * .5 + Math.sin(a * 9 - ph * 1.3) * .3 + Math.sin(a * 14 + ph * 2.1) * .2);
+      x[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cx + r * Math.sin(a));
+    }
+    x.strokeStyle = rgba(c, [.95, .45, .3][layer]); x.lineWidth = [1.6, 1, .8][layer];
+    x.shadowColor = rgba(c, .9); x.shadowBlur = 10; x.stroke();
+  }
+  x.shadowBlur = 0;
+  for (let i = 0; i < 72; i++){
+    const a = i / 72 * Math.PI * 2, v = (Math.sin(i * 1.7 + t * 6) * .5 + .5) * (Math.sin(i * .6 - t * 3.3) * .5 + .5);
+    const r1 = w * .335, r2 = r1 + w * (.006 + .07 * energy * v);
+    x.beginPath(); x.moveTo(cx + r1 * Math.cos(a), cx + r1 * Math.sin(a)); x.lineTo(cx + r2 * Math.cos(a), cx + r2 * Math.sin(a));
+    x.strokeStyle = rgba(c, .25 + .6 * v); x.lineWidth = 2; x.stroke();
+  }
+}
+
+// layered voice line under the transcript
+function drawVoice(t){
+  const [x, w, h] = fit($('voice')), mid = h / 2;
+  [[tone(), 1, 1], [[47,128,255], .75, 1.6], [[139,92,246], .55, 2.3]].forEach(([col, s, k], j) => {
+    x.beginPath();
+    // stop short of the edges: the glow blur piles up at the canvas border and draws a bright bar there
+    for (let px = 8; px <= w - 8; px += 2){
+      const u = px / w, env = Math.sin(Math.PI * u) ** 2;
+      x[px > 8 ? 'lineTo' : 'moveTo'](px,mid + Math.sin(u * Math.PI * 2 * (2 + k) + t * (3 + j) + j) * env * h * .44 * (.06 + .94 * energy) * s);
+    }
+    x.strokeStyle = rgba(col, .85); x.lineWidth = 1.6; x.shadowColor = rgba(col, 1); x.shadowBlur = 8; x.stroke();
+  });
+}
+
+// floating dust, plus a particle burst and shockwave rings from the core on every action
+let parts = [], rings = [];
+const dust = Array.from({ length: RM ? 0 : 50 }, () => ({ x: Math.random(), y: Math.random(), s: Math.random() * 1.6 + .4, v: Math.random() * .0004 + .0001, p: Math.random() * 6 }));
+function burst(){
+  if (RM) return;
+  const b = $('reactor').getBoundingClientRect(), cx = b.left + b.width / 2, cy = b.top + b.height / 2, c = tone();
+  for (let i = 0; i < 90; i++){ const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 7;
+    parts.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, s: Math.random() * 2.2 + .6, c }); }
+  rings.push({ x: cx, y: cy, r: b.width * .19, c }, { x: cx, y: cy, r: b.width * .05, c });
+}
+function drawFx(t){
+  const [x, w, h] = fit($('fx')), far = Math.max(w, h) * .6;
+  dust.forEach(d => { if ((d.y -= d.v) < -.02) { d.y = 1.02; d.x = Math.random(); }
+    x.fillStyle = `rgba(120,220,255,${.2 + .25 * Math.sin(t * 2 + d.p)})`; x.beginPath(); x.arc(d.x * w, d.y * h, d.s, 0, 7); x.fill(); });
+  parts = parts.filter(p => (p.life -= .016) > 0);
+  parts.forEach(p => { p.x += p.vx; p.y += p.vy; p.vx *= .96; p.vy *= .96;
+    x.fillStyle = rgba(p.c, p.life); x.shadowColor = rgba(p.c, 1); x.shadowBlur = 8; x.beginPath(); x.arc(p.x, p.y, p.s, 0, 7); x.fill(); });
+  x.shadowBlur = 0;
+  rings = rings.filter(r => (r.r += 6) < far);
+  rings.forEach(r => { x.strokeStyle = rgba(r.c, .7 * (1 - r.r / far)); x.lineWidth = 2; x.beginPath(); x.arc(r.x, r.y, r.r, 0, 7); x.stroke(); });
+}
+
+function frame(ms){
+  const t = ms / 1000;
+  // while an action runs, energy follows a speech-like rhythm; otherwise it settles to a calm idle
+  const target = performance.now() < talkUntil ? .45 + .55 * Math.abs(Math.sin(t * 6.3) * Math.sin(t * 2.1 + 1)) : .1;
+  energy += (target - energy) * .08;
+  drawRing(t); drawVoice(t); drawFx(t);
+  if (!RM) requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+if (!RM){
+  addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse') return;
+    const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
+    $('holo').style.setProperty('--ry', x * 24 + 'deg'); $('holo').style.setProperty('--rx', -y * 24 + 'deg');
+    document.body.style.setProperty('--cx', e.clientX + 'px'); document.body.style.setProperty('--cy', e.clientY + 'px');
+  });
+  document.querySelectorAll('.card').forEach(c => {
+    c.addEventListener('pointermove', e => {
+      if (e.pointerType !== 'mouse') return;
+      const b = c.getBoundingClientRect(), x = (e.clientX - b.left) / b.width, y = (e.clientY - b.top) / b.height, k = 7 * Math.min(1, 260 / b.height);
+      c.style.setProperty('--ty', (x - .5) * k + 'deg'); c.style.setProperty('--tx', (.5 - y) * k + 'deg');
+      c.style.setProperty('--mx', x * 100 + '%'); c.style.setProperty('--my', y * 100 + '%');
+    });
+    c.addEventListener('pointerleave', () => { c.style.setProperty('--tx', '0deg'); c.style.setProperty('--ty', '0deg'); });
+  });
+}
 </script>
 </body>
 </html>
