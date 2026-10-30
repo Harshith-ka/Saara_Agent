@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { findFiles, describe, buildIndex } from './files.js';
 import { createMonitor } from './monitor.js';
 import { createClassroom } from './classroom.js';
+import { createWeb } from './web.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 for (const line of (fs.existsSync(path.join(ROOT, '.env')) ? fs.readFileSync(path.join(ROOT, '.env'), 'utf8') : '').split(/\r?\n/)) {
@@ -90,6 +91,8 @@ async function readBattery() {
 const classroom = createClassroom({ root: ROOT, env: process.env });
 const monitor = createMonitor({ root: ROOT, env: process.env, record: (e) => record(e), battery: readBattery });
 const FOCUS_MUSIC = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+// Read-only web lookups (movies, food, prices, Google) in a separate background Chrome window.
+const web = createWeb({ root: ROOT, env: process.env, openUrl });
 
 const SITES = {
   youtube: 'https://www.youtube.com', gmail: 'https://mail.google.com', google: 'https://www.google.com',
@@ -306,8 +309,18 @@ const ACTIONS = {
   async submit_assignment({ input }) { return classroom.prepare(input); },
   async confirm_submission() { return classroom.confirm(); },
   async submission_status() { return classroom.submissionStatus(); },
+
+  // ----- web lookups: answers read from the live sites; Saara never books, orders or pays -----
+  async movie_shows({ input }) { return web.lookup('movies', input); },
+  async food_check({ input }) { return web.lookup('food', input); },
+  async price_compare({ input }) { return web.lookup('prices', input); },
+  async web_answer({ input }) { return web.lookup('answer', input); },
+  async lookup_result() { return web.lookupResult(); },
+  async open_result() { return web.openResult(); },
 };
-const ALIASES = { open_site: 'open_website', website: 'open_website', search: 'web_search', youtube: 'play_youtube', play: 'play_youtube', app: 'open_app', note: 'take_note', notes: 'read_notes', status: 'system_status', battery: 'system_status', lock: 'lock_screen', media: 'media_control', volume: 'media_control', say: 'speak_on_laptop', speak: 'speak_on_laptop', screenshot: 'take_screenshot', timer: 'set_timer', email: 'draft_email', maps: 'directions', routine: 'run_routine', mode: 'run_routine', file: 'find_file', open_file: 'find_file', focus: 'focus_session', deadline: 'add_deadline', remind: 'add_deadline', deadlines: 'list_deadlines', submitted: 'finish_deadline', done: 'finish_deadline' };
+// Status checks must always answer fresh, never with a repeat of a reply from a few seconds ago.
+const NO_DEDUPE = new Set(['lookup_result', 'submission_status']);
+const ALIASES = { open_site: 'open_website', website: 'open_website', search: 'web_search', youtube: 'play_youtube', play: 'play_youtube', app: 'open_app', note: 'take_note', notes: 'read_notes', status: 'system_status', battery: 'system_status', lock: 'lock_screen', media: 'media_control', volume: 'media_control', say: 'speak_on_laptop', speak: 'speak_on_laptop', screenshot: 'take_screenshot', timer: 'set_timer', email: 'draft_email', maps: 'directions', routine: 'run_routine', mode: 'run_routine', file: 'find_file', open_file: 'find_file', focus: 'focus_session', deadline: 'add_deadline', remind: 'add_deadline', deadlines: 'list_deadlines', submitted: 'finish_deadline', done: 'finish_deadline', movies: 'movie_shows', movie: 'movie_shows', food: 'food_check', prices: 'price_compare', price: 'price_compare', ask: 'web_answer' };
 
 // ---------- auth ----------
 function authorise(req, body) {
@@ -404,7 +417,7 @@ http.createServer(async (req, res) => {
   // answer the repeats with the first result.
   const key = `${name}|${norm(input)}`;
   const prev = recent.get(key);
-  if (prev && Date.now() - prev.at < DEDUPE_MS) {
+  if (prev && Date.now() - prev.at < DEDUPE_MS && !NO_DEDUPE.has(name)) {
     const result = await prev.result;
     return json(res, 200, { ok: true, result });
   }

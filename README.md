@@ -18,6 +18,12 @@ Your phone → Sarvam phone number → Saara (Sarvam voice agent)
 - Draft Gmail emails (you press send yourself)
 - Track deadlines and phone you before they're due, or when the battery is low
 - Read your Google Classroom to-do list and attach assignments
+- Check the web live and read the answer back on the call:
+  - movie showtimes, prices and seats on BookMyShow ("best show for Cult tomorrow near Kukatpally?")
+  - whether a dish or restaurant is open and delivering on Swiggy ("is Paradise Biryani delivering now?")
+  - a product's price on Amazon vs Flipkart
+  - anything else Google answers: scores, gold rate, opening hours, train timings
+  - then open the page on your screen to book or order. Saara never books, orders or pays.
 
 Only your own phone number is obeyed, and every request needs your secret token. Saara can only run the fixed actions in `saara/server.js`. Nothing said on a call ever runs as a command.
 
@@ -59,6 +65,7 @@ The free tunnel address changes every time cloudflared restarts. Update the tool
 
 - **Saara calls you**: fill the `SARVAM_*` and `ARRC_*` values in `.env` (workspace key, org and workspace IDs, agent ID and version, phone number and connection ID).
 - **Google Classroom**: set `CLASSROOM_SUBMIT=attach`, restart, and sign in once in the Chrome window that opens. `attach` only attaches files; you still press Turn in.
+- **Web checks**: set `HOME_CITY` (for movies) and `HOME_AREA` (your delivery area for food) in `.env`. Saara reads the sites in her own minimized Chrome window; if a site ever asks for a robot check, solve it once in that window.
 
 ## Add your own action
 

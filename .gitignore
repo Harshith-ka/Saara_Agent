@@ -6,6 +6,9 @@
 # Google sign-in cookies for the Classroom window
 .classroom-profile/
 
+# Saara's web-lookup Chrome window (cookies for Swiggy, Amazon and other sites)
+.web-profile/
+
 # Personal data written at runtime
 deadlines.json
 classroom-cache.json

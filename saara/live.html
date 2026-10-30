@@ -386,10 +386,11 @@ const CAPS = {
   speak_on_laptop:['🔊','Speak'], take_screenshot:['📸','Screenshot'], system_status:['🔋','Battery & time'],
   lock_screen:['🔒','Lock'], add_deadline:['⏰','Deadlines'], list_deadlines:['📋','What is due'],
   finish_deadline:['✅','Mark done'], classroom_due:['🎓','Classroom'], submit_assignment:['📤','Upload work'],
-  call_owner:['📞','Calls you'],
+  call_owner:['📞','Calls you'], movie_shows:['🎬','Movie tickets'], food_check:['🍔','Food check'],
+  price_compare:['🏷️','Price compare'], web_answer:['🌍','Ask the web'], open_result:['🖥️','Open result'],
 };
 const NICE = Object.fromEntries(Object.entries(CAPS).map(([k,v])=>[k,v[1]]));
-const HINTS = ['Search Google for IPL score','Open Google Classroom',"What's due on Classroom?",'Play Arijit Singh on YouTube',
+const HINTS = ['Best show for Cult tomorrow near Kukatpally?','Is Paradise Biryani delivering now?','iPhone 16 price on Amazon vs Flipkart','Search Google for IPL score','Open Google Classroom',"What's due on Classroom?",'Play Arijit Singh on YouTube',
   'Remind me, DBMS project due tomorrow 5 pm','5 minute ka timer lagao chai ke liye','Open my resume','Work mode on karo','How much battery?'];
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const $ = id => document.getElementById(id);
